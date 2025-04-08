@@ -47,7 +47,7 @@ class Supermarket:
         ]
 
     @classmethod
-    async def resolve_reference(cls, id: strawberry.ID) -> Optional["Supermarket"]:
+    async def resolve_reference(cls, id: int) -> Optional["Supermarket"]:
         model = await crud_supermarket.get(id)
         return Supermarket(**model.to_dict()) if model else None
 
