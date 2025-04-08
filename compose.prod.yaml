@@ -1,0 +1,45 @@
+services:
+  supermarket-service_postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 2s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - supermarket-service
+
+  supermarket-service:
+    build:
+      dockerfile: Dockerfile.prod
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - POSTGRES_URL=supermarket-service_postgres
+      - MONGO_URL=supermarket-service_mongo
+    depends_on:
+      supermarket-service_postgres:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    tty: true
+    networks:
+      - supermarket-service
+      - backend
+      - analytics
+    labels:
+      - "traefik.http.routers.supermarket-service.rule=HostRegexp(`api\\..+`) && PathPrefix(`/supermarket`)"
+
+
+networks:
+  supermarket-service:
+
+volumes:
+  postgres-data:
