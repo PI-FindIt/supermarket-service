@@ -6,13 +6,13 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres"]
+      test: [ "CMD", "pg_isready", "-U", "postgres" ]
       interval: 2s
       timeout: 5s
       retries: 5
     restart: unless-stopped
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - supermarket-postgres-data:/var/lib/postgresql/data
     networks:
       - supermarket-service
 
@@ -42,4 +42,4 @@ networks:
   supermarket-service:
 
 volumes:
-  postgres-data:
+  supermarket-postgres-data:
