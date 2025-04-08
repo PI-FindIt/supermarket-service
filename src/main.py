@@ -13,8 +13,7 @@ from strawberry.extensions.tracing import OpenTelemetryExtension
 from strawberry.fastapi import GraphQLRouter
 
 from src.config.session import init_postgres_db
-from src.graphql import Mutation, Query
-from src.models import Product, Category
+from src.graphql import Product, Query, Supermarket
 
 
 @asynccontextmanager
@@ -25,8 +24,7 @@ async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
 
 schema = strawberry.federation.Schema(
     query=Query,
-    mutation=Mutation,
-    types=[Product, Category],
+    types=[Supermarket, Product],
     extensions=[OpenTelemetryExtension],
     enable_federation_2=True,
 )
