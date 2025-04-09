@@ -2,9 +2,8 @@ import json
 import random
 
 
-def get_price() -> float:
-    mean_value = random.random() * 5 + 1
-    return round(random.gauss(mean_value, mean_value / 4), 2)
+def get_price(mean_value: float) -> float:
+    return round(random.gauss(mean_value, mean_value / 5), 2)
 
 
 def get_random_supermarkets() -> list[int]:
@@ -21,7 +20,12 @@ output: dict[str, list[tuple[int, float]]] = dict()
 
 for ean in eans:
     supermarkets = get_random_supermarkets()
-    prices = [(supermarket_id, get_price()) for supermarket_id in supermarkets]
+    mean_value = random.random() * 5 + 1
+    print("\n->", ean, mean_value)
+    prices = [
+        (supermarket_id, get_price(mean_value)) for supermarket_id in supermarkets
+    ]
+    print(prices)
     output[ean] = prices
 
 insert_statements = [
