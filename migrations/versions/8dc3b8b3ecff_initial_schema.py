@@ -8,9 +8,8 @@ Create Date: 2025-04-08 19:40:03.603070
 
 from typing import Sequence
 
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "8dc3b8b3ecff"
@@ -51,7 +50,7 @@ def upgrade() -> None:
         "supermarket_location",
         sa.Column("supermarket_id", sa.Integer(), nullable=False),
         sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
-        sa.Column("name", sa.String(), nullable=False),
+        sa.Column("name", sa.String(), nullable=True),
         sa.Column("image", sa.String(), nullable=True),
         sa.Column("latitude", sa.Float(), nullable=False),
         sa.Column("longitude", sa.Float(), nullable=False),

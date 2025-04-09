@@ -46,7 +46,7 @@ class SupermarketLocation(Base):
         ForeignKey("supermarket.id"), index=True, primary_key=True
     )
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    name: Mapped[str]
+    name: Mapped[str | None] = mapped_column(default=None)
     image: Mapped[str | None] = mapped_column(default=None)
     latitude: Mapped[float]
     longitude: Mapped[float]

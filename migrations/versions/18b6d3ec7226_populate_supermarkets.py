@@ -24,4 +24,4 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.execute("TRUNCATE TABLE supermarket CASCADE")
+    op.execute("TRUNCATE TABLE supermarket_location CASCADE")
