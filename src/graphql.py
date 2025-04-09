@@ -18,11 +18,13 @@ class Product:
 
     @strawberry.field()
     async def supermarkets(self) -> list["SupermarketWithPrice"]:
-        objects = await crud_price.get_by_product(self.ean)
-        return [
-            SupermarketWithPrice(price=obj.price, supermarket=obj.supermarket)
-            for obj in objects
-        ]
+        async with crud_price.get_session() as session:
+            objects = await crud_price.get_by_product(self.ean, session)
+            return [
+                SupermarketWithPrice(price=obj.price, supermarket=supermarket)
+                for obj in objects
+                if (supermarket := await obj.awaitable_attrs.supermarket)
+            ]
 
 
 @strawberry_sqlalchemy_mapper.type(models.SupermarketLocation, use_federation=True)

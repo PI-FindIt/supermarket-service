@@ -3,13 +3,11 @@ from typing import Any
 
 from sqlalchemy import ARRAY, ForeignKey
 from sqlalchemy import Enum as SQLAlchemyEnum
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-
-_BaSe = declarative_base()
+from sqlalchemy.ext.asyncio import AsyncAttrs
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
-class Base(_BaSe):
+class Base(AsyncAttrs, DeclarativeBase):
     __abstract__ = True
 
     def to_dict(self) -> dict[str, Any]:
