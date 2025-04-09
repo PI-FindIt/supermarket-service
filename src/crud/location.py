@@ -12,7 +12,7 @@ class CrudLocation(CrudBase[SupermarketLocation, None, tuple[int, int]]):
     async def get_by_supermarket(
         self, id: int, session: AsyncSession | None = None
     ) -> list[SupermarketLocation]:
-        async with self._get_session(session) as session:
+        async with self.get_session(session) as session:
             query = select(SupermarketLocation).where(
                 SupermarketLocation.supermarket_id == id
             )

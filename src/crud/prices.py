@@ -12,7 +12,7 @@ class CrudPrice(CrudBase[SupermarketPrice, None, tuple[int, str]]):
     async def get_by_supermarket(
         self, id: int, session: AsyncSession | None = None
     ) -> list[SupermarketPrice]:
-        async with self._get_session(session) as session:
+        async with self.get_session(session) as session:
             query = select(SupermarketPrice).where(
                 SupermarketPrice.supermarket_id == id
             )
@@ -22,7 +22,7 @@ class CrudPrice(CrudBase[SupermarketPrice, None, tuple[int, str]]):
     async def get_by_product(
         self, ean: str, session: AsyncSession | None = None
     ) -> list[SupermarketPrice]:
-        async with self._get_session(session) as session:
+        async with self.get_session(session) as session:
             query = select(SupermarketPrice).where(SupermarketPrice.product_ean == ean)
             result = await session.execute(query)
             return result.scalars().all()

@@ -61,7 +61,7 @@ class CrudBase[T: Base, F, K: int | tuple[int | str, ...]]:
 
     @staticmethod
     @asynccontextmanager
-    async def _get_session(
+    async def get_session(
         session: AsyncSession | None = None,
     ) -> AsyncGenerator[AsyncSession, None]:
         if session is not None:
@@ -71,7 +71,7 @@ class CrudBase[T: Base, F, K: int | tuple[int | str, ...]]:
             yield session
 
     async def get(self, id: K, session: AsyncSession | None = None) -> T | None:
-        async with self._get_session(session) as session:
+        async with self.get_session(session) as session:
             return await session.get(self.model, id)
 
     async def get_all(
@@ -79,7 +79,7 @@ class CrudBase[T: Base, F, K: int | tuple[int | str, ...]]:
         filters: F,
         session: AsyncSession | None = None,
     ) -> list[T]:
-        async with self._get_session(session) as session:
+        async with self.get_session(session) as session:
             query = select(self.model)  # type: ignore
             if self.filter is not None:
                 for key, value in [
