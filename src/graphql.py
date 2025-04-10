@@ -4,10 +4,10 @@ import strawberry
 from strawberry_sqlalchemy_mapper import StrawberrySQLAlchemyMapper
 
 from src import models
-from src.crud.base import Operator
 from src.crud.location import crud_location
 from src.crud.prices import crud_price
 from src.crud.supermarket import crud_supermarket
+from src.filters import SupermarketLocationFilter, SupermarketFilter
 
 strawberry_sqlalchemy_mapper = StrawberrySQLAlchemyMapper()
 
@@ -28,7 +28,13 @@ class Product:
 
 
 @strawberry_sqlalchemy_mapper.type(models.SupermarketLocation, use_federation=True)
-class SupermarketLocation: ...
+class SupermarketLocation:
+    __exclude__ = ["supermarket"]
+
+    @strawberry.field()
+    async def supermarket(self) -> Optional["Supermarket"]:
+        obj = await crud_supermarket.get(self.supermarket_id)
+        return Supermarket(**obj.to_dict()) if obj else None
 
 
 @strawberry_sqlalchemy_mapper.type(models.Supermarket, use_federation=True)
@@ -54,26 +60,6 @@ class Supermarket:
         return Supermarket(**model.to_dict()) if model else None
 
 
-@strawberry.input()
-class Filter[T]:
-    value: T
-    op: Operator
-
-
-@strawberry.input()
-class SupermarketFilter:
-    ean: Optional[Filter[str]] = None
-    name: Optional[Filter[str]] = None
-    generic_name: Optional[Filter[str]] = None
-    ingredients: Optional[Filter[str]] = None
-    quantity: Optional[Filter[str]] = None
-    unit: Optional[Filter[str]] = None
-    keywords: Optional[Filter[list[str]]] = None
-    images: Optional[Filter[list[str]]] = None
-    brand_name: Optional[Filter[str]] = None
-    category_name: Optional[Filter[str]] = None
-
-
 @strawberry.type()
 class SupermarketWithPrice:
     price: float
@@ -97,6 +83,13 @@ class Query:
     ) -> SupermarketLocation | None:
         obj = await crud_location.get((supermarket_id, id))
         return SupermarketLocation(**obj.to_dict()) if obj else None
+
+    @strawberry.field()
+    async def supermarket_locations(
+        self, filters: SupermarketLocationFilter
+    ) -> list[SupermarketLocation]:
+        objects = await crud_location.get_all(filters)
+        return [SupermarketLocation(**obj.to_dict()) for obj in objects]
 
     @strawberry.field()
     async def supermarket(self, id: int) -> Supermarket | None:

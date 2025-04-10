@@ -80,7 +80,7 @@ class CrudBase[T: Base, F, K: int | tuple[int | str, ...]]:
         session: AsyncSession | None = None,
     ) -> list[T]:
         async with self.get_session(session) as session:
-            query = select(self.model)  # type: ignore
+            query = select(self.model)
             if self.filter is not None:
                 for key, value in [
                     (column.key, getattr(filters, column.key))
