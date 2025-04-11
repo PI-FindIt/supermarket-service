@@ -34,8 +34,6 @@ services:
     depends_on:
       supermarket-service_postgres:
         condition: service_healthy
-      elasticsearch:
-        condition: service_healthy
     volumes:
       - .:/supermarket-service
     tty: true
