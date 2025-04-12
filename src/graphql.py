@@ -1,6 +1,7 @@
 from typing import Optional
 
 import strawberry
+from strawberry.federation.schema_directives import Key, Shareable
 from strawberry_sqlalchemy_mapper import StrawberrySQLAlchemyMapper
 
 from src import models
@@ -37,7 +38,7 @@ class SupermarketLocation:
         return Supermarket(**obj.to_dict()) if obj else None
 
 
-@strawberry_sqlalchemy_mapper.type(models.Supermarket, use_federation=True)
+@strawberry_sqlalchemy_mapper.type(models.Supermarket, use_federation=True, directives=[Key(fields="id"), Shareable()])
 class Supermarket:
     __exclude__ = ["locations", "prices"]
 
