@@ -7,10 +7,15 @@ ENV ENV development
 
 WORKDIR /supermarket-service
 
-RUN pip install --no-cache poetry
+RUN apk add --no-cache patch && pip install --no-cache poetry
 
 COPY poetry.lock pyproject.toml ./
+COPY patches/ ./patches/
 RUN poetry install --with dev
 
+WORKDIR /usr/local/lib/python3.13/site-packages
+RUN patch -p1 < /supermarket-service/patches/strawberry-sqlalchemy.patch
+
+WORKDIR /supermarket-service
 EXPOSE 8000
 CMD [ "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload" ]
