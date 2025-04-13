@@ -28,7 +28,7 @@ class Supermarket:
 
     def to_sql(self) -> str:
         name = f"'self.name'" if self.name else "NULL"
-        return f"INSERT INTO supermarket_location (supermarket_id, id, name, image, latitude, longitude) VALUES ({self.id}, DEFAULT, {name}, NULL, {self.lat}, {self.lon});"
+        return f"INSERT INTO supermarket_location (supermarket_id, id, name, latitude, longitude) VALUES ({self.id}, DEFAULT, {name}, {self.lat}, {self.lon});"
 
 
 supermarkets: list[Supermarket] = []

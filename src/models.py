@@ -27,6 +27,7 @@ class Supermarket(Base):
     __tablename__ = "supermarket"
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     name: Mapped[str]
+    logo: Mapped[str | None] = mapped_column(default=None)
     image: Mapped[str | None] = mapped_column(default=None)
     services: Mapped[list[SupermarketServices]] = mapped_column(
         ARRAY(SQLAlchemyEnum(SupermarketServices)), index=True
@@ -46,8 +47,7 @@ class SupermarketLocation(Base):
         ForeignKey("supermarket.id"), index=True, primary_key=True
     )
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    name: Mapped[str | None] = mapped_column(default=None)
-    image: Mapped[str | None] = mapped_column(default=None)
+    name: Mapped[str | None] = mapped_column(default=None, nullable=True)
     latitude: Mapped[float]
     longitude: Mapped[float]
     supermarket: Mapped[Supermarket] = relationship(back_populates="locations")

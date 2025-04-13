@@ -23,6 +23,7 @@ def upgrade() -> None:
         "supermarket",
         sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
         sa.Column("name", sa.String(), nullable=False),
+        sa.Column("logo", sa.String(), nullable=True),
         sa.Column("image", sa.String(), nullable=True),
         sa.Column(
             "services",
@@ -51,7 +52,6 @@ def upgrade() -> None:
         sa.Column("supermarket_id", sa.Integer(), nullable=False),
         sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
         sa.Column("name", sa.String(), nullable=True),
-        sa.Column("image", sa.String(), nullable=True),
         sa.Column("latitude", sa.Float(), nullable=False),
         sa.Column("longitude", sa.Float(), nullable=False),
         sa.ForeignKeyConstraint(
