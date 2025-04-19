@@ -85,7 +85,7 @@ class CrudBase[T: Base, F, K: int | tuple[int | str, ...]]:
                 for key, value in [
                     (column.key, getattr(filters, column.key))
                     for column in self.model.__table__.columns
-                    if getattr(filters, column.key) is not None
+                    if column.key != "logo" and getattr(filters, column.key) is not None
                 ]:
                     query = operations(self.model)[value.op](query, key, value.value)
             result = await session.execute(query)
