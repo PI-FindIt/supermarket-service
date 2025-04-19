@@ -20,6 +20,19 @@ services:
     labels:
       - "traefik.http.routers.supermarket-service_postgres.rule=HostRegexp(`postgres\\..+`) && PathPrefix(`/supermarket`)"
 
+  supermarket-service_redis:
+    image: redis:8.0-rc1-alpine
+    command: redis-server --save 20 1 --loglevel warning
+    volumes:
+      - supermarket-redis-data:/data
+    networks:
+      - supermarket-service
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 5s
+      retries: 5
+
   supermarket-service:
     build:
       dockerfile: Dockerfile
@@ -31,8 +44,15 @@ services:
       POSTGRES_URL: supermarket-service_postgres
       MONGO_DB: mongo
       MONGO_URL: supermarket-service_mongo
+      REDIS_URL: redis://supermarket-service_redis:6379
+      REDIS_POOL_SIZE: "10"
+      REDIS_POOL_TIMEOUT: "5"
+      REDIS_POOL_RETRY_ATTEMPTS: "3"
+
     depends_on:
       supermarket-service_postgres:
+        condition: service_healthy
+      supermarket-service_redis:
         condition: service_healthy
     volumes:
       - .:/supermarket-service
@@ -48,3 +68,4 @@ networks:
   supermarket-service:
 volumes:
   supermarket-postgres-data:
+  supermarket-redis-data:
