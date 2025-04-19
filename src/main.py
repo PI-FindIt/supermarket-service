@@ -13,6 +13,7 @@ from strawberry.extensions.tracing import OpenTelemetryExtension
 from strawberry.fastapi import GraphQLRouter
 
 from src.config.session import init_postgres_db
+from src.config.redis import setup_redis_cache
 from src.graphql import Product, Query, Supermarket
 from src.config.settings import settings
 
@@ -20,6 +21,7 @@ from src.config.settings import settings
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
     await init_postgres_db()
+    await setup_redis_cache()
     yield
 
 
