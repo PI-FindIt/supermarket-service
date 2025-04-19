@@ -4,10 +4,8 @@ from typing import AsyncGenerator, Callable, Any
 
 from fastapi_cache.coder import PickleCoder
 from fastapi_cache.decorator import cache
-from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from strawberry.types.base import StrawberryType
 
 from src.config.session import get_postgres_session
 from src.models import Base
