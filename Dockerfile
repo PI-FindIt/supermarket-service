@@ -7,11 +7,13 @@ ENV ENV development
 
 WORKDIR /supermarket-service
 
-RUN apk add --no-cache patch && pip install --no-cache poetry
+RUN apk add --no-cache patch && pip install --no-cache uv uvicorn
 
-COPY poetry.lock pyproject.toml ./
+
+
+COPY uv.lock pyproject.toml ./
 COPY patches/ ./patches/
-RUN poetry install --with dev
+RUN uv sync --group dev
 
 WORKDIR /usr/local/lib/python3.13/site-packages
 RUN patch -p1 < /supermarket-service/patches/strawberry-sqlalchemy.patch
