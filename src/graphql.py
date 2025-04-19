@@ -21,6 +21,7 @@ class Product:
     async def supermarkets(self) -> list["SupermarketWithPrice"]:
         async with crud_price.get_session() as session:
             objects = await crud_price.get_by_product(self.ean, session)
+
             return [
                 SupermarketWithPrice(price=obj.price, supermarket=supermarket)
                 for obj in objects
@@ -38,7 +39,9 @@ class SupermarketLocation:
         return Supermarket(**obj.to_dict()) if obj else None
 
 
-@strawberry_sqlalchemy_mapper.type(models.Supermarket, use_federation=True, directives=[Key(fields="id"), Shareable()])
+@strawberry_sqlalchemy_mapper.type(
+    models.Supermarket, use_federation=True, directives=[Key(fields="id"), Shareable()]
+)
 class Supermarket:
     __exclude__ = ["locations", "prices"]
 

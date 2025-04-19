@@ -14,10 +14,10 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from strawberry.extensions.tracing import OpenTelemetryExtension
 from strawberry.fastapi import GraphQLRouter
 
-from src.config.session import init_postgres_db
 from src.config.redis import init_redis_pool
-from src.graphql import Product, Query, Supermarket
+from src.config.session import init_postgres_db
 from src.config.settings import settings
+from src.graphql import Product, Query, Supermarket
 
 
 @asynccontextmanager
@@ -29,6 +29,7 @@ async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
         yield
     finally:
         await redis.close()
+
 
 schema = strawberry.federation.Schema(
     query=Query,

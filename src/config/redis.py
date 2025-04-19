@@ -1,6 +1,7 @@
 from typing import AsyncGenerator
 
-from pydantic import AmqpDsn, Field, RedisDsn
+from fastapi_cache import FastAPICache
+from pydantic import Field, RedisDsn
 from pydantic_settings import BaseSettings
 from redis.asyncio import Redis
 from redis.backoff import ExponentialBackoff
@@ -13,28 +14,26 @@ class RedisSettings(BaseSettings):
     redis_url: RedisDsn = Field(
         default="redis://supermarket-service_redis:6379",
         description="Redis connection URL with schema (redis:// or rediss://)",
-        examples=["redis://localhost:6379", "rediss://secure-redis:6379"]
+        examples=["redis://localhost:6379", "rediss://secure-redis:6379"],
     )
     redis_pool_size: int = Field(
         default=10,
         ge=1,
         le=50,
-        description="Maximum number of connections in the Redis connection pool"
+        description="Maximum number of connections in the Redis connection pool",
     )
     redis_pool_timeout: int = Field(
         default=5,
         ge=1,
-        description="Timeout in seconds for acquiring a connection from the pool"
+        description="Timeout in seconds for acquiring a connection from the pool",
     )
     redis_cache_ttl: int = Field(
-        default=300,
-        ge=60,
-        description="Default TTL (in seconds) for cached items"
+        default=300, ge=60, description="Default TTL (in seconds) for cached items"
     )
     redis_retry_attempts: int = Field(
         default=3,
         ge=0,
-        description="Number of retry attempts for failed Redis operations"
+        description="Number of retry attempts for failed Redis operations",
     )
 
     class Config:
@@ -50,8 +49,7 @@ async def init_redis_pool(settings: RedisSettings | None = None) -> Redis:
         settings = RedisSettings()
 
     retry_strategy = Retry(
-        backoff=ExponentialBackoff(),
-        retries=settings.redis_retry_attempts
+        backoff=ExponentialBackoff(), retries=settings.redis_retry_attempts
     )
 
     return Redis.from_url(
@@ -75,6 +73,7 @@ async def get_redis() -> AsyncGenerator[Redis, None]:
         yield redis
     finally:
         pass  # Don't close the pool here; let lifespan manage it
+
 
 def get_redis_settings() -> RedisSettings:
     """Get Redis settings with environment variables override."""
