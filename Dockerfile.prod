@@ -10,7 +10,7 @@ RUN apk add --no-cache patch && pip install --no-cache uv
 COPY . .
 RUN uv sync
 
-WORKDIR /usr/local/lib/python3.13/site-packages
+WORKDIR /supermarket-service/.venv/lib/python3.13/site-packages
 RUN patch -p1 < /supermarket-service/patches/strawberry-sqlalchemy.patch
 
 WORKDIR /supermarket-service
