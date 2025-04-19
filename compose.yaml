@@ -55,6 +55,7 @@ services:
       supermarket-service_redis:
         condition: service_healthy
     volumes:
+      - /supermarket-service/.venv
       - .:/supermarket-service
     tty: true
     networks:

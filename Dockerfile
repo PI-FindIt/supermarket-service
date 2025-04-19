@@ -1,17 +1,20 @@
-FROM python:3.13-alpine
+FROM ghcr.io/astral-sh/uv:python3.13-alpine
 ENV PYTHONUNBUFFERED 1
 ENV PYTHONDONTWRITEBYTECODE 1
+ENV UV_COMPILE_BYTECODE=1
+ENV UV_LINK_MODE=copy
 ENV ENV development
 
 WORKDIR /supermarket-service
 
-RUN apk add --no-cache patch && pip install --no-cache uv uvicorn
+ENV PATH="/supermarket-service/.venv/bin:$PATH"
+RUN apk add --no-cache patch
 
 
 
 COPY uv.lock pyproject.toml ./
 COPY patches/ ./patches/
-RUN uv sync --group dev
+RUN uv sync --frozen
 
 WORKDIR /supermarket-service/.venv/lib/python3.13/site-packages
 

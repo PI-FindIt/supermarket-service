@@ -5,7 +5,6 @@ from strawberry.federation.schema_directives import Key, Shareable
 from strawberry_sqlalchemy_mapper import StrawberrySQLAlchemyMapper
 
 from src import models
-from src.config.redis import cached_resolver
 from src.crud.location import crud_location
 from src.crud.prices import crud_price
 from src.crud.supermarket import crud_supermarket
@@ -19,7 +18,6 @@ class Product:
     ean: str
 
     @strawberry.field()
-    @cached_resolver()
     async def supermarkets(self) -> list["SupermarketWithPrice"]:
         async with crud_price.get_session() as session:
             objects = await crud_price.get_by_product(self.ean, session)
@@ -35,7 +33,6 @@ class SupermarketLocation:
     __exclude__ = ["supermarket"]
 
     @strawberry.field()
-    @cached_resolver()
     async def supermarket(self) -> Optional["Supermarket"]:
         obj = await crud_supermarket.get(self.supermarket_id)
         return Supermarket(**obj.to_dict()) if obj else None
@@ -46,13 +43,11 @@ class Supermarket:
     __exclude__ = ["locations", "prices"]
 
     @strawberry.field()
-    @cached_resolver()
     async def locations(self) -> list[SupermarketLocation]:
         objects = await crud_location.get_by_supermarket(self.id)  # type: ignore
         return [SupermarketLocation(**obj.to_dict()) for obj in objects]
 
     @strawberry.field()
-    @cached_resolver()
     async def products(self) -> list["ProductWithPrice"]:
         objects = await crud_price.get_by_supermarket(self.id)  # type: ignore
         return [
@@ -84,7 +79,6 @@ strawberry_sqlalchemy_mapper.finalize()
 @strawberry.type
 class Query:
     @strawberry.field()
-    @cached_resolver()
     async def supermarket_location(
         self, supermarket_id: int, id: int
     ) -> SupermarketLocation | None:
@@ -92,7 +86,6 @@ class Query:
         return SupermarketLocation(**obj.to_dict()) if obj else None
 
     @strawberry.field()
-    @cached_resolver()
     async def supermarket_locations(
         self, filters: SupermarketLocationFilter
     ) -> list[SupermarketLocation]:
@@ -100,13 +93,11 @@ class Query:
         return [SupermarketLocation(**obj.to_dict()) for obj in objects]
 
     @strawberry.field()
-    @cached_resolver()
     async def supermarket(self, id: int) -> Supermarket | None:
         obj = await crud_supermarket.get(id)
         return Supermarket(**obj.to_dict()) if obj else None
 
     @strawberry.field()
-    @cached_resolver()
     async def supermarkets(self, filters: SupermarketFilter) -> list[Supermarket]:
         objects = await crud_supermarket.get_all(filters)
         return [Supermarket(**obj.to_dict()) for obj in objects]

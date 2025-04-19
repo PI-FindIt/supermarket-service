@@ -1,75 +1,81 @@
-from typing import Any, AsyncGenerator, Callable, TypeVar
-from redis.asyncio import Redis
-from fastapi_cache import FastAPICache
-from fastapi_cache.backends.redis import RedisBackend
-from fastapi_cache.decorator import cache
-from pydantic_settings import BaseSettings
+from typing import AsyncGenerator
 
-T = TypeVar("T")
+from pydantic import AmqpDsn, Field, RedisDsn
+from pydantic_settings import BaseSettings
+from redis.asyncio import Redis
+from redis.backoff import ExponentialBackoff
+from redis.retry import Retry
+
 
 class RedisSettings(BaseSettings):
-    """Redis connection settings"""
-    # TODO THIS MUST BE SET IN THE COMPOSE FILE and get from env
-    redis_url: str = "redis://supermarket-service_redis:6379"
-    redis_pool_size: int = 10
-    redis_pool_timeout: int = 5
-    redis_pool_retry_attempts: int = 3
+    """Redis connection settings with validation and environment variables support."""
+
+    redis_url: RedisDsn = Field(
+        default="redis://supermarket-service_redis:6379",
+        description="Redis connection URL with schema (redis:// or rediss://)",
+        examples=["redis://localhost:6379", "rediss://secure-redis:6379"]
+    )
+    redis_pool_size: int = Field(
+        default=10,
+        ge=1,
+        le=50,
+        description="Maximum number of connections in the Redis connection pool"
+    )
+    redis_pool_timeout: int = Field(
+        default=5,
+        ge=1,
+        description="Timeout in seconds for acquiring a connection from the pool"
+    )
+    redis_cache_ttl: int = Field(
+        default=300,
+        ge=60,
+        description="Default TTL (in seconds) for cached items"
+    )
+    redis_retry_attempts: int = Field(
+        default=3,
+        ge=0,
+        description="Number of retry attempts for failed Redis operations"
+    )
 
     class Config:
         env_prefix = "REDIS_"
+        case_sensitive = False
+        env_file = ".env"
+        extra = "ignore"
 
-async def init_redis_pool() -> Redis:
-    """Initialize Redis connection pool"""
-    settings = RedisSettings()
-    redis = Redis.from_url(
-        settings.redis_url,
+
+async def init_redis_pool(settings: RedisSettings | None = None) -> Redis:
+    """Initialize Redis connection pool with retry strategy."""
+    if not settings:
+        settings = RedisSettings()
+
+    retry_strategy = Retry(
+        backoff=ExponentialBackoff(),
+        retries=settings.redis_retry_attempts
+    )
+
+    return Redis.from_url(
+        str(settings.redis_url),
         encoding="utf8",
-        decode_responses=True,
+        decode_responses=False,  # Important for binary serialization
         max_connections=settings.redis_pool_size,
         socket_timeout=settings.redis_pool_timeout,
         retry_on_timeout=True,
-        retry=settings.redis_pool_retry_attempts
+        retry=retry_strategy,
+        health_check_interval=30,
     )
-    try:
-        await redis.ping()
-        return redis
-    except Exception as e:
-        raise Exception(f"Could not connect to Redis: {str(e)}")
+
 
 async def get_redis() -> AsyncGenerator[Redis, None]:
     """Dependency for getting Redis connection"""
-    redis = await init_redis_pool()
+    redis = FastAPICache.get_backend().redis  # type: ignore
+    if not redis:
+        redis = await init_redis_pool()
     try:
         yield redis
     finally:
-        await redis.close()
+        pass  # Don't close the pool here; let lifespan manage it
 
-async def setup_redis_cache() -> None:
-    """Initialize FastAPI Cache with Redis backend"""
-    redis = await init_redis_pool()
-    FastAPICache.init(
-        RedisBackend(redis), 
-        prefix="supermarket-cache",
-        key_builder=None,
-        expire=None
-    )
-
-def cached_resolver(
-    expire: int = 600,  # 10 minutes default (600 seconds)
-    namespace: str | None = None
-) -> Callable[[Callable[..., T]], Callable[..., T]]:
-    """
-    Cache decorator for GraphQL resolvers
-    :param expire: Cache expiration time in seconds
-    :param namespace: Cache namespace for grouping related items
-    """
-    def decorator(func: Callable[..., T]) -> Callable[..., T]:
-        async def wrapper(*args: Any, **kwargs: Any) -> T:
-            cache_key_args = args[1:] if args else ()
-            return await cache(
-                expire=expire,
-                namespace=namespace,
-                key_builder=lambda: f"{func.__name__}:{str(cache_key_args)}:{str(kwargs)}"
-            )(func)(*args, **kwargs)
-        return wrapper
-    return decorator
+def get_redis_settings() -> RedisSettings:
+    """Get Redis settings with environment variables override."""
+    return RedisSettings()

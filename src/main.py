@@ -3,6 +3,8 @@ from typing import AsyncGenerator
 
 import strawberry
 from fastapi import FastAPI
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
@@ -13,7 +15,7 @@ from strawberry.extensions.tracing import OpenTelemetryExtension
 from strawberry.fastapi import GraphQLRouter
 
 from src.config.session import init_postgres_db
-from src.config.redis import setup_redis_cache
+from src.config.redis import init_redis_pool
 from src.graphql import Product, Query, Supermarket
 from src.config.settings import settings
 
@@ -21,9 +23,12 @@ from src.config.settings import settings
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
     await init_postgres_db()
-    await setup_redis_cache()
-    yield
-
+    redis = await init_redis_pool()  # Initialize once
+    FastAPICache.init(RedisBackend(redis), prefix="supermarket-cache")
+    try:
+        yield
+    finally:
+        await redis.close()
 
 schema = strawberry.federation.Schema(
     query=Query,
