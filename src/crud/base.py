@@ -28,6 +28,8 @@ class Operator(Enum):
     NOT_CONTAINS = "not contains"
     ANY = "any"
     ALL = "all"
+    LIMIT = "limit"
+    OFFSET = "offset"
 
 
 operations = lambda model: {
@@ -47,6 +49,8 @@ operations = lambda model: {
     Operator.NOT_CONTAINS: lambda q, k, v: q.where(getattr(model, k).notcontains(v)),
     Operator.ANY: lambda q, k, v: q.where(getattr(model, k).any(v)),
     Operator.ALL: lambda q, k, v: q.where(getattr(model, k).all(v)),
+    Operator.LIMIT: lambda q, k, v: q.limit(v),
+    Operator.OFFSET: lambda q, k, v: q.offset(v),
 }
 
 
@@ -55,13 +59,10 @@ def _get_filter_value(filter_obj: Any) -> Any:
     if filter_obj is None:
         return None
 
-    if hasattr(filter_obj, 'value') and hasattr(filter_obj, 'op'):
-        return {
-            'value': _get_filter_value(filter_obj.value),
-            'op': str(filter_obj.op)
-        }
+    if hasattr(filter_obj, "value") and hasattr(filter_obj, "op"):
+        return {"value": _get_filter_value(filter_obj.value), "op": str(filter_obj.op)}
 
-    if hasattr(filter_obj, '__dict__'):
+    if hasattr(filter_obj, "__dict__"):
         return {
             k: _get_filter_value(v)
             for k, v in vars(filter_obj).items()
@@ -89,6 +90,7 @@ def crud_get_key_builder(
     id = kwargs["args"][1] if len(kwargs["args"]) > 1 else None
     return f"{namespace}crud:{model_name}:get:{id}"
 
+
 def crud_get_all_key_builder(
     func: Callable[..., Any],
     namespace: str = "",
@@ -101,13 +103,12 @@ def crud_get_all_key_builder(
 
     if filters:
         filter_dict = _get_filter_value(filters)
-        filter_items = sorted(
-            (str(k), str(v)) for k, v in filter_dict.items()
-        )
+        filter_items = sorted((str(k), str(v)) for k, v in filter_dict.items())
         filter_hash = hash(tuple(filter_items))
         return f"{namespace}crud:{model_name}:get_all:{filter_hash}"
 
     return f"{namespace}crud:{model_name}:get_all"
+
 
 class CrudBase[T: Base, F, K: int | tuple[int | str, ...]]:
     """
@@ -136,7 +137,7 @@ class CrudBase[T: Base, F, K: int | tuple[int | str, ...]]:
             yield session
 
     @cache(
-        expire=60,
+        expire=600,
         key_builder=crud_get_key_builder,
         coder=PickleCoder,
     )
@@ -145,7 +146,7 @@ class CrudBase[T: Base, F, K: int | tuple[int | str, ...]]:
             return await session.get(self.model, id)
 
     @cache(
-        expire=60,
+        expire=600,
         key_builder=crud_get_all_key_builder,
         coder=PickleCoder,
     )

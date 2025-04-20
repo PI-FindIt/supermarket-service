@@ -3,21 +3,23 @@ from typing import AsyncGenerator
 
 from alembic import command, config
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
-from sqlalchemy import Connection, create_engine, AsyncAdaptedQueuePool
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
+from sqlalchemy import Connection
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 
 from src.config.settings import settings
 
-postgres_engine = AsyncEngine(
-    create_engine(
-        settings.POSTGRES_URI,
-        poolclass=AsyncAdaptedQueuePool,
-        pool_size=100,
-        max_overflow=10,
-        pool_timeout=30,
-        pool_recycle=1800,
-        future=True,
-    )
+postgres_engine = create_async_engine(
+    settings.POSTGRES_URI,
+    # poolclass=AsyncAdaptedQueuePool,
+    # pool_size=50,
+    # echo_pool="debug",
+    pool_timeout=300,
+    # pool_recycle=1800,
+    future=True,
 )
 
 

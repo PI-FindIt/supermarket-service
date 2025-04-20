@@ -21,12 +21,15 @@ class Product:
     async def supermarkets(self) -> list["SupermarketWithPrice"]:
         async with crud_price.get_session() as session:
             objects = await crud_price.get_by_product(self.ean, session)
-
-            return [
-                SupermarketWithPrice(price=obj.price, supermarket=supermarket)
-                for obj in objects
-                if (supermarket := await obj.awaitable_attrs.supermarket)
-            ]
+            try:
+                return [
+                    SupermarketWithPrice(price=obj.price, supermarket=supermarket)
+                    for obj in objects
+                    if (supermarket := await obj.awaitable_attrs.supermarket)
+                ]
+            except Exception as e:
+                print("GETTING FROM REDIS")
+                return objects
 
 
 @strawberry_sqlalchemy_mapper.type(models.SupermarketLocation, use_federation=True)
@@ -98,7 +101,11 @@ class Query:
     @strawberry.field()
     async def supermarket(self, id: int) -> Supermarket | None:
         obj = await crud_supermarket.get(id)
-        return Supermarket(**obj.to_dict()) if obj else None
+        try:
+            return Supermarket(**obj.to_dict()) if obj else None
+        except Exception as e:
+            print("GETTING FROM REDIS")
+            return obj
 
     @strawberry.field()
     async def supermarkets(self, filters: SupermarketFilter) -> list[Supermarket]:
