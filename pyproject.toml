@@ -26,6 +26,7 @@ dependencies = [
     "redis[hiredis]>=4.6.0",
     "fastapi-cache2[redis]>=0.2.2",
     "types-redis>=4.6.0.20241004",
+    "gunicorn>=23.0.0",
 ]
 
 [dependency-groups]
