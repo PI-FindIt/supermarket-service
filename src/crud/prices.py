@@ -1,25 +1,8 @@
-from typing import Callable, Any
-
-from fastapi_cache.coder import PickleCoder
-from fastapi_cache.decorator import cache
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.crud.base import CrudBase
 from src.models import SupermarketPrice
-
-
-def crud_get_all_key_builder(
-    func: Callable[..., Any],
-    namespace: str = "",
-    *args: Any,
-    **kwargs: Any,
-) -> str:
-    self_instance = kwargs["args"][0] if kwargs else None
-    model_name = self_instance.model.__name__ if self_instance else ""
-    ean = kwargs["args"][1] if len(kwargs["args"]) > 1 else []
-
-    return f"{namespace}crud:{model_name}:get_by_product:{ean}"
 
 
 class CrudPrice(CrudBase[SupermarketPrice, None, tuple[int, str]]):
@@ -36,11 +19,6 @@ class CrudPrice(CrudBase[SupermarketPrice, None, tuple[int, str]]):
             result = await session.execute(query)
             return result.scalars().all()
 
-    @cache(
-        expire=600,
-        key_builder=crud_get_all_key_builder,
-        coder=PickleCoder,
-    )
     async def get_by_product(
         self, ean: str, session: AsyncSession | None = None
     ) -> list[SupermarketPrice]:
