@@ -28,7 +28,9 @@ class Supermarket(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     name: Mapped[str]
     logo: Mapped[str | None] = mapped_column(default=None)
+    logo_blurhash: Mapped[str | None] = mapped_column(default=None)
     image: Mapped[str | None] = mapped_column(default=None)
+    image_blurhash: Mapped[str | None] = mapped_column(default=None)
     services: Mapped[list[SupermarketServices]] = mapped_column(
         ARRAY(SQLAlchemyEnum(SupermarketServices)), index=True
     )

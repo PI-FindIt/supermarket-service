@@ -18,9 +18,11 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
+    print("-> Populating supermarkets")
     with open("migrations/supermarket.sql") as file:
-        for stmt in [stmt.strip() for stmt in file.read().split(";") if stmt.strip()]:
+        for stmt in [stmt.strip() for stmt in file.read().split(";\n") if stmt.strip()]:
             op.execute(sa.text(stmt))
+    print("   Finished populating supermarkets")
 
 
 def downgrade() -> None:

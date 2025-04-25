@@ -24,7 +24,9 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
         sa.Column("name", sa.String(), nullable=False),
         sa.Column("logo", sa.String(), nullable=True),
+        sa.Column("logo_blurhash", sa.String(), nullable=True),
         sa.Column("image", sa.String(), nullable=True),
+        sa.Column("image_blurhash", sa.String(), nullable=True),
         sa.Column(
             "services",
             sa.ARRAY(
