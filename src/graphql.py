@@ -22,7 +22,12 @@ class Product:
         async with crud_price.get_session() as session:
             objects = await crud_price.get_by_product(self.ean, session)
             return [
-                SupermarketWithPrice(price=obj.price, supermarket=supermarket)
+                SupermarketWithPrice(
+                    id=obj.supermarket_id,
+                    ean=obj.product_ean,
+                    price=obj.price,
+                    supermarket=supermarket,
+                )
                 for obj in objects
                 if (supermarket := await obj.awaitable_attrs.supermarket)
             ]
@@ -63,10 +68,23 @@ class Supermarket:
         return Supermarket(**model.to_dict()) if model else None
 
 
-@strawberry.type()
+@strawberry.federation.type(keys=["id", "ean"])
 class SupermarketWithPrice:
+    id: int
+    ean: str
     price: float
     supermarket: Supermarket
+
+    @classmethod
+    async def resolve_reference(
+        cls, id: int, ean: str
+    ) -> Optional["SupermarketWithPrice"]:
+        model = await crud_price.get((id, ean))
+        if model is None:
+            return None
+        return SupermarketWithPrice(
+            id=id, ean=ean, price=model.price, supermarket=model.supermarket
+        )
 
 
 @strawberry.type()
