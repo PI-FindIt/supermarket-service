@@ -68,7 +68,7 @@ class Supermarket:
         return Supermarket(**model.to_dict()) if model else None
 
 
-@strawberry.federation.type(keys=["id", "ean"])
+@strawberry.federation.type(keys=["id ean"])
 class SupermarketWithPrice:
     id: int
     ean: str
@@ -76,15 +76,17 @@ class SupermarketWithPrice:
     supermarket: Supermarket
 
     @classmethod
-    async def resolve_reference(
-        cls, id: int, ean: str
-    ) -> Optional["SupermarketWithPrice"]:
-        model = await crud_price.get((id, ean))
-        if model is None:
-            return None
-        return SupermarketWithPrice(
-            id=id, ean=ean, price=model.price, supermarket=model.supermarket
-        )
+    async def resolve_reference(cls, **data: str | int) -> Optional["SupermarketWithPrice"]:
+        async with crud_price.get_session() as session:
+            model = await crud_price.get((data["id"], data["ean"]), session)
+            if model is None:
+                return None
+            return SupermarketWithPrice(
+                id=data["id"],
+                ean=data["ean"],
+                price=model.price,
+                supermarket=await model.awaitable_attrs.supermarket,
+            )
 
 
 @strawberry.type()
